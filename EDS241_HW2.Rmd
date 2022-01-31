@@ -60,26 +60,26 @@ ggplot(data = NOX_data, aes(x = dnox_masstons)) +
 
 ## (b) Create an indicator =1 if the county has PctBlack above the sample median, and =0 otherwise (in the rest of the assignment, I refer to this variable as ‘D’). What is the average of PctBlack for counties above the median, i.e. counties for which D=1?
 ```{r}
-med_pctblack <- median(NOX_data$pct_black)
-
 NOX_data <- NOX_data %>% 
-  mutate(D = if_else(nbp > median(pct_black), 
+  mutate(D = if_else(pct_black > median(pct_black), 
                      true = 1, 
                      false = 0))
+
+head(NOX_data)
 ```
 
-
+\newpage
 ## (c) Estimate a regression of Dnox_masstons on NBP. Interpret the estimated intercept and the coefficient on NBP.
 ```{r}
 model1 <- lm_robust(formula = dnox_masstons ~ nbp , data = NOX_data)
 
-# tidy_model1 = broom::tidy(model1)
-# 
-# tidy_model1 %>%
-#   dplyr::select(term, estimate, std.error, p.value) %>% 
-#   knitr::kable() %>% 
-#   kableExtra::kable_styling(full_width = FALSE, 
-#                 latex_options = "HOLD_position")
+tidy_model1 = broom::tidy(model1)
+
+tidy_model1 %>%
+  dplyr::select(term, estimate, std.error, p.value) %>%
+  knitr::kable() %>%
+  kableExtra::kable_styling(full_width = FALSE,
+                latex_options = "HOLD_position")
 ```
 
 - Intercept: The change in annual NOx emissions from all power plants in a county between 2000 and 2008 (in tons) for a county not regulated under the NOx Budget Program.
@@ -90,6 +90,14 @@ model1 <- lm_robust(formula = dnox_masstons ~ nbp , data = NOX_data)
 
 ```{r}
 model2 <- lm_robust(formula = dnox_masstons ~ nbp + D + nbp*D , data = NOX_data)
+
+tidy_model2 = broom::tidy(model2)
+
+tidy_model2 %>%
+  dplyr::select(term, estimate, std.error, p.value) %>%
+  knitr::kable() %>%
+  kableExtra::kable_styling(full_width = FALSE,
+                latex_options = "HOLD_position")
 ```
 
 - Intercept: The change in annual NOx emissions from all power plants in a county between 2000 and 2008 (in tons) for a county not regulated under the NOx Budget Program and that is below the median fraction of the county population that is African American.
@@ -98,7 +106,7 @@ model2 <- lm_robust(formula = dnox_masstons ~ nbp + D + nbp*D , data = NOX_data)
 
 - D: The difference in annual NOx emissions from all power plants in a county between 2000 and 2008 (in tons) for a county that was not regulated under the NOx Budget Program and that is above the median fraction of the county population that is African American.
 
-- nbp*D: The difference in annual NOx emissions from all power plants in a county between 2000 and 2008 (in tons) for a county that was regulated under the NOx Budget Program and that is above the median fraction of the county population that is African American.
+- nbp:D: The difference in annual NOx emissions from all power plants in a county between 2000 and 2008 (in tons) for a county that was regulated under the NOx Budget Program and that is above the median fraction of the county population that is African American.
 
 ### (e) What is the predicted Dnox_masstons in a county that was not regulated under NBP and where PctBlack is above the sample median (i.e., where D=1)? Report the 95% confidence interval for this prediction. Make sure to use “heteroskedasticity-robust” standard errors.
 ```{r}
@@ -107,5 +115,7 @@ ci <- predict(object = model2,
               newdata = new_dat, 
               se.fit=TRUE, 
               interval = "confidence")
-```
 
+ci$fit
+```
+The predicted Dnox_masstons in a county that was not regulated under NBP and where PctBlack is above the sample median is `r ci$fit[1, 1]`. We are 95% confident that the true predicted value for a county that was not regulated under NBP and where PctBlack is above the sample median is between `r ci$fit[1, 2]` and `r ci$fit[1, 3]`.
