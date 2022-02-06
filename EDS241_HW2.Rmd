@@ -66,7 +66,14 @@ NOX_data <- NOX_data %>%
                      false = 0))
 
 head(NOX_data)
+
+NOX_greater_median <- NOX_data %>% 
+  filter(D == 1)
+
+mean_pct_black <- mean(NOX_greater_median$pct_black)
 ```
+
+The average of PctBlack for counties above the median is `r mean_pct_black`. 
 
 \newpage
 ## (c) Estimate a regression of Dnox_masstons on NBP. Interpret the estimated intercept and the coefficient on NBP.
@@ -82,14 +89,14 @@ tidy_model1 %>%
                 latex_options = "HOLD_position")
 ```
 
-- Intercept: The change in annual NOx emissions from all power plants in a county between 2000 and 2008 (in tons) for a county not regulated under the NOx Budget Program.
+- Intercept: The average total change in NOx emissions from all power plants in a county between 2000 and 2008 (in tons) for a county not regulated under the NOx Budget Program.
 
-- Coefficient: The difference in annual NOx emissions from all power plants in a county between 2000 and 2008 (in tons) for a county that was regulated under the NOx Budget Program.
+- Coefficient (nbp): The average total change in NOx emissions from all power plants in a county between 2000 and 2008 (in tons) for a county that was regulated under the NOx Budget Program.
 
 ### (d) Create an interaction between the variables NBP and D. Estimate a regression of Dnox_masstons on NBP, D, and this interaction. Interpret each estimated regression coefficient, including the intercept.
 
 ```{r}
-model2 <- lm_robust(formula = dnox_masstons ~ nbp + D + nbp*D , data = NOX_data)
+model2 <- lm_robust(formula = dnox_masstons ~ nbp + D + nbp:D , data = NOX_data)
 
 tidy_model2 = broom::tidy(model2)
 
@@ -100,13 +107,13 @@ tidy_model2 %>%
                 latex_options = "HOLD_position")
 ```
 
-- Intercept: The change in annual NOx emissions from all power plants in a county between 2000 and 2008 (in tons) for a county not regulated under the NOx Budget Program and that is below the median fraction of the county population that is African American.
+- Intercept: The average total change in NOx emissions from all power plants in a county between 2000 and 2008 (in tons) for a county not regulated under the NOx Budget Program and that has a African American population that is below the median for the data set.
 
-- nbp: The difference in annual NOx emissions from all power plants in a county between 2000 and 2008 (in tons) for a county that was regulated under the NOx Budget Program and that is below the median fraction of the county population that is African American.
+- nbp: The difference between the intercept (see definition above) and the average change in NOx emissions from all power plants in a county between 2000 and 2008 (in tons) for a county that was regulated under the NOx Budget Program and that has a African American population that is below the median for the data set.
 
-- D: The difference in annual NOx emissions from all power plants in a county between 2000 and 2008 (in tons) for a county that was not regulated under the NOx Budget Program and that is above the median fraction of the county population that is African American.
+- D: The difference between the intercept (see definition above) and the average change in NOx emissions from all power plants in a county between 2000 and 2008 (in tons) for a county that was not regulated under the NOx Budget Program and that has a African American population that is above the median for the data set.
 
-- nbp:D: The difference in annual NOx emissions from all power plants in a county between 2000 and 2008 (in tons) for a county that was regulated under the NOx Budget Program and that is above the median fraction of the county population that is African American.
+- nbp:D:  The difference between all other scenarios and the average total change in NOx emissions from all power plants in a county between 2000 and 2008 (in tons) for a county that was regulated under the NOx Budget Program and that is above the median fraction of the county population that is African American.
 
 ### (e) What is the predicted Dnox_masstons in a county that was not regulated under NBP and where PctBlack is above the sample median (i.e., where D=1)? Report the 95% confidence interval for this prediction. Make sure to use “heteroskedasticity-robust” standard errors.
 ```{r}
@@ -118,4 +125,4 @@ ci <- predict(object = model2,
 
 ci$fit
 ```
-The predicted Dnox_masstons in a county that was not regulated under NBP and where PctBlack is above the sample median is `r ci$fit[1, 1]`. We are 95% confident that the true predicted value for a county that was not regulated under NBP and where PctBlack is above the sample median is between `r ci$fit[1, 2]` and `r ci$fit[1, 3]`.
+The predicted Dnox_masstons in a county that was not regulated under NBP and where PctBlack is above the sample median is `r ci$fit[1, 1]`. The 95% confidence interval is `r ci$fit[1, 2]` and `r ci$fit[1, 3]`.
